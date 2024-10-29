@@ -1,0 +1,65 @@
+import tkinter as tk
+import random
+
+class BingoCard:
+    def __init__(self):
+        self.card = self.generate_card()
+        self.selected = [[False]*5 for _ in range(5)]  # 選択された数字を管理
+
+    def generate_card(self):
+        card = []
+        
+        ranges = [(1, 15), (16, 30), (31, 45), (46, 60), (61, 75)]
+        for r in ranges:
+            column_numbers = random.sample(range(r[0], r[1] + 1), 5)
+            card.append(column_numbers)
+        card[2][2] = 'FREE'  
+        return card
+
+    def check_bingo(self):
+       
+        for i in range(5):
+            if all(self.selected[i]):  # 行チェック
+                return True
+            if all(self.selected[j][i] for j in range(5)):  # 列チェック
+                return True
+        if all(self.selected[i][i] for i in range(5)):  # 斜めチェック
+            return True
+        if all(self.selected[i][4 - i] for i in range(5)):  # 反対斜めチェック
+            return True
+        return False
+
+class BingoApp:
+    def __init__(self, master):
+        self.master = master
+        self.card = BingoCard()
+        self.buttons = [[None]*5 for _ in range(5)]
+        self.create_widgets()
+
+    def create_widgets(self):
+        for i in range(5):
+            for j in range(5):
+                number = self.card.card[j][i]
+                button = tk.Button(self.master, text=number, width=5, height=2,
+                                   command=lambda x=j, y=i: self.select_number(x, y))
+                button.grid(row=j, column=i)
+                self.buttons[j][i] = button
+
+    def select_number(self, row, col):
+        if self.card.card[col][row] != 'FREE':
+            self.card.selected[col][row] = not self.card.selected[col][row]
+            self.update_button(row, col)
+            if self.card.check_bingo():
+                tk.messagebox.showinfo("ビンゴ!", "おめでとうございます！ビンゴです。")
+
+    def update_button(self, row, col):
+        if self.card.selected[col][row]:
+            self.buttons[col][row].config(bg='green')
+        else:
+            self.buttons[col][row].config(bg='SystemButtonFace')
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("ビンゴのカード生成システム")
+    app = BingoApp(root)
+    root.mainloop()
